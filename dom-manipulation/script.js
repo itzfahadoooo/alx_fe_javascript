@@ -249,3 +249,31 @@ const exportButton = document.createElement("button");
 exportButton.textContent = "Export Quotes";
 exportButton.addEventListener("click", exportToJsonFile);
 document.body.appendChild(exportButton);
+// ---------- Import quotes from JSON ----------
+function importFromJsonFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader(); // ✅ FileReader
+  reader.onload = function(e) {    // ✅ onload
+    try {
+      const importedQuotes = JSON.parse(e.target.result); // parse JSON
+      quotes.push(...importedQuotes); // add to existing quotes
+      saveQuotes();                   // update localStorage
+      populateCategories();           // update categories dropdown
+      displayRandomQuote();           // show a random quote
+      alert("Quotes imported successfully!");
+    } catch (err) {
+      alert("Failed to import quotes: Invalid JSON.");
+    }
+  };
+
+  reader.readAsText(file);          // ✅ readAsText
+}
+
+// ---------- Create import input ----------
+const importInput = document.createElement("input");
+importInput.type = "file";
+importInput.accept = ".json";
+importInput.addEventListener("change", importFromJsonFile);
+document.body.appendChild(importInput);
