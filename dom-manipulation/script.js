@@ -277,3 +277,39 @@ importInput.type = "file";
 importInput.accept = ".json";
 importInput.addEventListener("change", importFromJsonFile);
 document.body.appendChild(importInput);
+// ---------- Populate categories dropdown ----------
+function populateCategories() {
+  const categoryFilter = document.getElementById("categoryFilter");
+
+  // If dropdown doesn't exist yet, create it
+  if (!categoryFilter) {
+    const select = document.createElement("select");
+    select.id = "categoryFilter";
+    select.addEventListener("change", filterQuotes);
+
+    const allOption = document.createElement("option");
+    allOption.value = "all";
+    allOption.textContent = "All Categories";
+    select.appendChild(allOption);
+
+    document.body.appendChild(select);
+  }
+
+  const selectElem = document.getElementById("categoryFilter");
+
+  // Remove old options except "All Categories"
+  Array.from(selectElem.options)
+       .filter(opt => opt.value !== "all")
+       .forEach(opt => opt.remove());
+
+  // Extract unique categories
+  const categories = [...new Set(quotes.map(q => q.category))];
+
+  // Populate dropdown
+  categories.forEach(cat => {
+    const option = document.createElement("option"); // ✅ option
+    option.value = cat;
+    option.textContent = cat;
+    selectElem.appendChild(option);
+  });
+}
