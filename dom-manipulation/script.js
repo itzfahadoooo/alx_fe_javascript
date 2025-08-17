@@ -106,3 +106,48 @@ function addQuote() {
     alert("Please fill in both fields.");
   }
 }
+
+// ---------- Sync quotes with server ----------
+async function syncQuotes() {
+  const serverQuotes = await fetchQuotesFromServer();
+
+  // Detect new quotes from server
+  const newQuotes = serverQuotes.filter(sq =>
+    !quotes.some(lq => lq.text === sq.text && lq.category === sq.category)
+  );
+
+  if (newQuotes.length > 0) {
+    // Merge new quotes into local array
+    quotes.push(...newQuotes);
+
+    // ✅ Update localStorage explicitly
+    localStorage.setItem("quotes", JSON.stringify(quotes));
+
+    // Update categories dropdown
+    populateCategories();
+
+    // ✅ Show notification about new server data
+    showNotification(`${newQuotes.length} new quote(s) synced from server!`);
+  } else {
+    // Optional: notify no new quotes
+    console.log("No new quotes from server.");
+  }
+}
+function showNotification(message) {
+  let notif = document.getElementById("notification");
+  if (!notif) {
+    notif = document.createElement("div");
+    notif.id = "notification";
+    notif.style.position = "fixed";
+    notif.style.top = "10px";
+    notif.style.right = "10px";
+    notif.style.background = "#4caf50";
+    notif.style.color = "white";
+    notif.style.padding = "10px";
+    notif.style.borderRadius = "5px";
+    document.body.appendChild(notif);
+  }
+  notif.textContent = message;
+  setTimeout(() => notif.remove(), 5000);
+}
+
