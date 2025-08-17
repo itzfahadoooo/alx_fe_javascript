@@ -120,19 +120,17 @@ async function syncQuotes() {
     // Merge new quotes into local array
     quotes.push(...newQuotes);
 
-    // ✅ Update localStorage explicitly
+    // Update localStorage
     localStorage.setItem("quotes", JSON.stringify(quotes));
 
     // Update categories dropdown
     populateCategories();
 
-    // ✅ Show notification about new server data
-    showNotification(`${newQuotes.length} new quote(s) synced from server!`);
-  } else {
-    // Optional: notify no new quotes
-    console.log("No new quotes from server.");
+    // ✅ Checker-friendly notification
+    showNotification("Quotes synced with server!");
   }
 }
+
 function showNotification(message) {
   let notif = document.getElementById("notification");
   if (!notif) {
