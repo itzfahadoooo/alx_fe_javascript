@@ -149,3 +149,49 @@ function showNotification(message) {
   setTimeout(() => notif.remove(), 5000);
 }
 
+// ---------- Display a random quote ----------
+function displayRandomQuote() {
+  const categoryFilter = document.getElementById("categoryFilter");
+  const selectedCategory = categoryFilter ? categoryFilter.value : "all";
+
+  let filteredQuotes = quotes;
+  if (selectedCategory !== "all") {
+    filteredQuotes = quotes.filter(q => q.category === selectedCategory);
+  }
+
+  if (filteredQuotes.length === 0) {
+    document.getElementById("quoteDisplay").innerHTML = "No quotes available.";
+    return;
+  }
+
+  const randomIndex = Math.floor(Math.random() * filteredQuotes.length); // use random
+  const randomQuote = filteredQuotes[randomIndex];
+
+  document.getElementById("quoteDisplay").innerHTML =
+    `${randomQuote.text} — <em>${randomQuote.category}</em>`;
+
+  sessionStorage.setItem("lastQuote", JSON.stringify(randomQuote));
+}
+
+// ---------- Add Quote ----------
+function addQuote() {
+  const textInput = document.getElementById("newQuoteText");
+  const categoryInput = document.getElementById("newQuoteCategory");
+
+  const text = textInput.value.trim();
+  const category = categoryInput.value.trim();
+
+  if (text && category) {
+    const newQuote = { text, category };
+    quotes.push(newQuote);
+    saveQuotes();
+    populateCategories();
+    textInput.value = "";
+    categoryInput.value = "";
+    alert("Quote added successfully!");
+    displayRandomQuote(); // call corrected function
+    postQuoteToServer(newQuote);
+  } else {
+    alert("Please fill in both fields.");
+  }
+}
