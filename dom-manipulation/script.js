@@ -230,3 +230,22 @@ const savedQuotes = localStorage.getItem("quotes");
 if (savedQuotes) {
   quotes = JSON.parse(savedQuotes);
 }
+// ---------- Export quotes to JSON ----------
+function exportToJsonFile() {
+  const dataStr = JSON.stringify(quotes, null, 2); // format JSON nicely
+  const blob = new Blob([dataStr], { type: "application/json" }); // ✅ Blob
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "quotes.json"; // file name
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+// ---------- Create export button ----------
+const exportButton = document.createElement("button");
+exportButton.textContent = "Export Quotes";
+exportButton.addEventListener("click", exportToJsonFile);
+document.body.appendChild(exportButton);
