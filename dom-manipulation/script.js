@@ -59,3 +59,50 @@ function showNotification(message) {
   notif.textContent = message;
   setTimeout(() => notif.remove(), 5000);
 }
+// Send a new quote to the server
+async function postQuoteToServer(quote) {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(quote)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server responded with ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log("Quote posted to server:", result);
+    showNotification("Quote successfully sent to server!");
+  } catch (error) {
+    console.error("Error posting quote:", error);
+    showNotification("Failed to send quote to server.");
+  }
+}
+
+function addQuote() {
+  const textInput = document.getElementById("newQuoteText");
+  const categoryInput = document.getElementById("newQuoteCategory");
+
+  const text = textInput.value.trim();
+  const category = categoryInput.value.trim();
+
+  if (text && category) {
+    const newQuote = { text, category };
+    quotes.push(newQuote);
+    saveQuotes();
+    populateCategories();
+    textInput.value = "";
+    categoryInput.value = "";
+    alert("Quote added successfully!");
+    showRandomQuote();
+
+    // POST the new quote to the server
+    postQuoteToServer(newQuote);
+  } else {
+    alert("Please fill in both fields.");
+  }
+}
