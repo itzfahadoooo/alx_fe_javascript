@@ -1,29 +1,29 @@
-// Load quotes from localStorage or start with defaults
+// ---------- Constants ----------
+const SERVER_URL = "https://jsonplaceholder.typicode.com/posts"; // mock server
+const SYNC_INTERVAL = 30000; // 30 seconds
+
+// ---------- Initial Quotes ----------
 let quotes = JSON.parse(localStorage.getItem("quotes")) || [
   { text: "Stay hungry, stay foolish.", category: "Inspiration" },
   { text: "Code is like humor. When you have to explain it, it’s bad.", category: "Programming" },
   { text: "In the middle of every difficulty lies opportunity.", category: "Motivation" }
 ];
 
-// Save quotes to localStorage
+// ---------- Storage Functions ----------
 function saveQuotes() {
   localStorage.setItem("quotes", JSON.stringify(quotes));
 }
 
-// Populate category filter dynamically
+// ---------- Category Functions ----------
 function populateCategories() {
   const categoryFilter = document.getElementById("categoryFilter");
-
-  // Clear old options
   categoryFilter.innerHTML = "";
 
-  // Always include "All"
   const allOption = document.createElement("option");
   allOption.value = "all";
   allOption.textContent = "All Categories";
   categoryFilter.appendChild(allOption);
 
-  // Extract unique categories
   const categories = [...new Set(quotes.map(q => q.category))];
   categories.forEach(cat => {
     const option = document.createElement("option");
@@ -32,14 +32,11 @@ function populateCategories() {
     categoryFilter.appendChild(option);
   });
 
-  // Restore last selected filter from localStorage
   const savedFilter = localStorage.getItem("selectedCategory");
-  if (savedFilter) {
-    categoryFilter.value = savedFilter;
-  }
+  if (savedFilter) categoryFilter.value = savedFilter;
 }
 
-// Show a random quote based on filter
+// ---------- Quote Display ----------
 function showRandomQuote() {
   const categoryFilter = document.getElementById("categoryFilter");
   const selectedCategory = categoryFilter.value;
@@ -59,18 +56,17 @@ function showRandomQuote() {
   document.getElementById("quoteDisplay").innerHTML =
     `${randomQuote.text} — <em>${randomQuote.category}</em>`;
 
-  // Save last viewed quote & filter
   sessionStorage.setItem("lastQuote", JSON.stringify(randomQuote));
   localStorage.setItem("selectedCategory", selectedCategory);
 }
 
-// Filter quotes when dropdown changes
+// ---------- Filtering ----------
 function filterQuotes() {
   localStorage.setItem("selectedCategory", document.getElementById("categoryFilter").value);
   showRandomQuote();
 }
 
-// Add a new quote
+// ---------- Add Quote ----------
 function addQuote() {
   const textInput = document.getElementById("newQuoteText");
   const categoryInput = document.getElementById("newQuoteCategory");
@@ -81,7 +77,7 @@ function addQuote() {
   if (text && category) {
     quotes.push({ text, category });
     saveQuotes();
-    populateCategories(); // update categories in dropdown
+    populateCategories();
     textInput.value = "";
     categoryInput.value = "";
     alert("Quote added successfully!");
@@ -91,7 +87,7 @@ function addQuote() {
   }
 }
 
-// Create Add Quote form dynamically
+// ---------- Add Quote Form ----------
 function createAddQuoteForm() {
   const formDiv = document.createElement("div");
 
@@ -116,7 +112,7 @@ function createAddQuoteForm() {
   document.body.appendChild(formDiv);
 }
 
-// Export quotes
+// ---------- JSON Export/Import ----------
 function exportToJsonFile() {
   const dataStr = JSON.stringify(quotes, null, 2);
   const blob = new Blob([dataStr], { type: "application/json" });
@@ -130,7 +126,6 @@ function exportToJsonFile() {
   URL.revokeObjectURL(url);
 }
 
-// Import quotes
 function importFromJsonFile(event) {
   const fileReader = new FileReader();
   fileReader.onload = function(e) {
@@ -139,7 +134,7 @@ function importFromJsonFile(event) {
       if (Array.isArray(importedQuotes)) {
         quotes.push(...importedQuotes);
         saveQuotes();
-        populateCategories(); // refresh categories
+        populateCategories();
         alert("Quotes imported successfully!");
       } else {
         alert("Invalid JSON format");
@@ -151,13 +146,67 @@ function importFromJsonFile(event) {
   fileReader.readAsText(event.target.files[0]);
 }
 
-// Event listeners
+// ---------- Server Sync ----------
+async function fetchServerQuotes() {
+  try {
+    const response = await fetch(SERVER_URL);
+    const serverData = await response.json();
+    return serverData.slice(0, 10).map(item => ({
+      text: item.title,
+      category: "Server"
+    }));
+  } catch (error) {
+    console.error("Error fetching server quotes:", error);
+    return [];
+  }
+}
+
+async function syncWithServer() {
+  const serverQuotes = await fetchServerQuotes();
+
+  const newQuotes = serverQuotes.filter(sq =>
+    !quotes.some(lq => lq.text === sq.text && lq.category === sq.category)
+  );
+
+  if (newQuotes.length > 0) {
+    quotes.push(...newQuotes);
+    saveQuotes();
+    populateCategories();
+    showNotification(`${newQuotes.length} new quote(s) synced from server!`);
+  }
+}
+
+function showNotification(message) {
+  let notif = document.getElementById("notification");
+  if (!notif) {
+    notif = document.createElement("div");
+    notif.id = "notification";
+    notif.style.position = "fixed";
+    notif.style.top = "10px";
+    notif.style.right = "10px";
+    notif.style.background = "#4caf50";
+    notif.style.color = "white";
+    notif.style.padding = "10px";
+    notif.style.borderRadius = "5px";
+    document.body.appendChild(notif);
+  }
+  notif.textContent = message;
+  setTimeout(() => notif.remove(), 5000);
+}
+
+// ---------- Event Listeners ----------
 document.getElementById("newQuote").addEventListener("click", showRandomQuote);
 document.getElementById("exportQuotes").addEventListener("click", exportToJsonFile);
 document.getElementById("importFile").addEventListener("change", importFromJsonFile);
 document.getElementById("categoryFilter").addEventListener("change", filterQuotes);
 
-// Run on page load
+// ---------- Manual Sync Button ----------
+const manualSyncButton = document.createElement("button");
+manualSyncButton.innerText = "Sync Now";
+manualSyncButton.addEventListener("click", syncWithServer);
+document.body.appendChild(manualSyncButton);
+
+// ---------- Initialization ----------
 createAddQuoteForm();
 populateCategories();
 
@@ -170,3 +219,6 @@ if (lastQuote) {
 } else {
   showRandomQuote();
 }
+
+// Start automatic server sync every 30 seconds
+setInterval(syncWithServer, SYNC_INTERVAL);
