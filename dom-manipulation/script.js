@@ -221,3 +221,12 @@ function createAddQuoteForm() {
 
 // Call this function on page load
 createAddQuoteForm();
+
+// ---------- Initialize quotes from localStorage ----------
+let quotes = [];
+
+// Load quotes from localStorage if available
+const savedQuotes = localStorage.getItem("quotes");
+if (savedQuotes) {
+  quotes = JSON.parse(savedQuotes);
+}
